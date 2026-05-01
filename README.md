@@ -5,7 +5,7 @@
 [![macOS](https://img.shields.io/badge/macOS-14.0%2B-black?logo=apple)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange?logo=swift)](https://swift.org)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Helper Version](https://img.shields.io/badge/helper-v3.10.0-green)]()
+[![Helper Version](https://img.shields.io/badge/helper-v3.11.0-green)]()
 [![SMAppService](https://img.shields.io/badge/SMAppService-LaunchDaemon-purple?logo=apple)]()
 [![XPC](https://img.shields.io/badge/IPC-NSXPCConnection-red)]()
 [![Contributors Welcome](https://img.shields.io/badge/contributors-welcome-brightgreen)]()
@@ -26,7 +26,7 @@ Paranoid asks for your admin password once. After that, a **LaunchDaemon running
 
 So we open-sourced it.
 
-🔍 **Audit it.** Read the 23 operation classes. Diff every release. Compile from source if you want.
+🔍 **Audit it.** Read the 26 operation classes. Diff every release. Compile from source if you want.
 🧪 **Reproduce builds.** No vendored binaries — pure Swift + a tiny C bridge for libpcap/raw sockets.
 🪛 **Fork it.** MIT-licensed. Strip what you don't need. Bolt your own ops on top.
 
@@ -36,7 +36,7 @@ The closed-source GUI is the product. The thing with `root` is *yours to verify*
 
 ## 🚀 What This Helper Actually Does
 
-A privileged macOS daemon exposing **23 raw-network primitives** over XPC. Think of it as `nmap` + `tcpdump` + `airodump-ng` glued together with `NSXPCConnection`, except:
+A privileged macOS daemon exposing **26 raw-network primitives** over XPC. Think of it as `nmap` + `tcpdump` + `airodump-ng` glued together with `NSXPCConnection`, except:
 
 - ✅ **Single privilege escalation** (`SMAppService.daemon` → install once, no `sudo` ever again)
 - ✅ **Code-signed both directions** — helper verifies the caller, app verifies the helper
@@ -48,7 +48,7 @@ If you've ever shipped an app that asks for `sudo` on every scan, you'll appreci
 
 ---
 
-## 🛠️ The Toolbox — All 23 Operations
+## 🛠️ The Toolbox — All 26 Operations
 
 ### 📡 Network Discovery (Layer 2)
 
@@ -97,6 +97,16 @@ If you've ever shipped an app that asks for `sudo` on every scan, you'll appreci
 | 💻 **`executeCommand`** | Whitelist-validated `Process` exec as root | Runs `nmap`, `masscan`, `bettercap` from Homebrew without password prompts |
 | 🖥️ **`openPTYSession`** + write/resize/close | Real PTY via `forkpty()` as root | Full interactive root shell streamed to the GUI |
 
+### 🔥 Honeypot / Firewall (pf packet filter)
+
+| Op | What | Use Case |
+|----|------|----------|
+| 🚫 **`applyPFBlocks`** | Writes `block drop in/out quick from <ip>` rules to anchor `com.apple/250.ParanoidBlocks` | Auto-ban attacker IPs detected by the honeypot, no `sudo pfctl` user prompt |
+| 🪤 **`applyHoneypotRedirects`** | Writes `rdr` rules to anchor `com.apple/250.ParanoidRedirect` (e.g. 22→8022, 80→8080, 3389→13389) | Make honeypots listen on standard privileged ports without binding as root |
+| 🧹 **`clearHoneypotPF`** | Selectively flushes block + redirect anchors | Stop honeypot → restore network state, no `/etc/pf.conf` mutation ever |
+
+Anchors live under `com.apple/` namespace so they're auto-loaded by the default macOS `pf.conf` (both `anchor "com.apple/*"` and `rdr-anchor "com.apple/*"` are present out of the box). **No system file is modified.** Validation: IPs via `inet_pton` (IPv4 + IPv6), ports `1-65535`, iface alphanumeric, proto `tcp|udp`.
+
 ---
 
 ## 🔐 Security Model — The "Why You Can Trust This"
@@ -132,13 +142,13 @@ Tamper with the app bundle → helper rejects the call. Swap the helper → app 
 IPscanner.helper/
 ├── main.swift                       # NSXPCListener bootstrap
 ├── HelperDaemonDelegate.swift       # Mutual code-sign verification
-├── HelperDaemonOperations.swift     # XPC method dispatch (23 ops)
+├── HelperDaemonOperations.swift     # XPC method dispatch (26 ops)
 ├── Info.plist                       # LaunchDaemon plist (SMAppService)
 ├── Bridging/
 │   ├── pcap_bridge.[ch]             # libpcap C wrappers
 │   ├── raw_socket.[ch]              # SOCK_RAW + L2 injection
 │   └── HelperDaemon-Bridging-Header.h
-├── Operations/                      # 23 isolated operation classes
+├── Operations/                      # 26 isolated operation classes
 │   ├── BaseOperation.swift          # Cancellation + progress streaming
 │   ├── ARPScanOperation.swift
 │   ├── PcapSYNScanOperation.swift   # The L2-bypass SYN scanner

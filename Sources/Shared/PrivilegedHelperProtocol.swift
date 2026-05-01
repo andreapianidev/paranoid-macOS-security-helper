@@ -301,6 +301,17 @@ protocol PrivilegedHelperProtocol {
     /// Invia frame deauth IEEE 802.11 via pcap injection in monitor mode.
     /// ATTENZIONE: chipset WiFi Apple potrebbero scartare silenziosamente i frame.
     /// Per injection affidabile usare adattatore WiFi USB esterno.
+    /// - Parameters:
+    ///   - interfaceName: Nome interfaccia BSD (es. "en0")
+    ///   - targetBSSID: BSSID dell'AP target (formato "AA:BB:CC:DD:EE:FF")
+    ///   - clientMAC: MAC del client target ("FF:FF:FF:FF:FF:FF" per broadcast = tutti i client)
+    ///   - channel: Canale WiFi dell'AP target
+    ///   - burstCount: Numero di frame deauth per burst
+    ///   - intervalMs: Intervallo tra burst in millisecondi
+    ///   - reasonCode: Codice motivo deauth IEEE 802.11 (7=Class3, 6=Class2, 1=Unspecified)
+    ///   - durationSeconds: Durata totale attacco in secondi
+    ///   - operationId: ID univoco per cancellazione
+    ///   - reply: JSON Data con {framesSent, framesFailed, durationSeconds} oppure errore
     func sendDeauthAttack(interfaceName: String, targetBSSID: String,
                           clientMAC: String, channel: Int32,
                           burstCount: Int32, intervalMs: Int32,
@@ -419,6 +430,41 @@ protocol PrivilegedHelperProtocol {
     ///   - reply: true se la sessione era attiva ed è stata chiusa
     func closePTYSession(operationId: String,
                          withReply reply: @escaping (Bool) -> Void)
+
+    // MARK: - Honeypot PF Rules (firewall packet filter)
+
+    /// Applica regole pf di blocco IP (anchor "paranoid_block") a un set di IP sorgente.
+    /// Le regole sono persistenti finché l'app non chiama `clearHoneypotPF`.
+    /// L'helper carica la pf.conf base se non già attiva, crea l'anchor "paranoid_block",
+    /// scrive le regole "block drop in quick from <ip>" e ricarica l'anchor.
+    /// - Parameters:
+    ///   - ipsJSON: JSON Data con array di IP da bloccare ([String])
+    ///   - operationId: ID univoco
+    ///   - reply: JSON Data con {applied: Int, anchor: String} oppure errore
+    func applyPFBlocks(ipsJSON: Data, operationId: String,
+                       withReply reply: @escaping (Data?, Error?) -> Void)
+
+    /// Applica regole pf di port redirect (anchor "paranoid_redirect") per dirottare
+    /// traffico in ingresso sulle porte standard (22, 23, 80, 443, 3389, 445...) verso
+    /// le porte locali dell'honeypot (8022, 8023, 8080, 8443, 13389, 8445...).
+    /// Solo per traffico in ingresso da rete locale (en0/en1), non loopback.
+    /// - Parameters:
+    ///   - redirectsJSON: JSON Data con array di {from: Int, to: Int, iface: String}
+    ///   - operationId: ID univoco
+    ///   - reply: JSON Data con {applied: Int} oppure errore
+    func applyHoneypotRedirects(redirectsJSON: Data, operationId: String,
+                                withReply reply: @escaping (Data?, Error?) -> Void)
+
+    /// Rimuove tutte le regole pf gestite dall'app (anchor paranoid_block + paranoid_redirect).
+    /// Non tocca pf.conf base né altre anchor.
+    /// - Parameters:
+    ///   - clearBlocks: Se true, svuota anchor paranoid_block
+    ///   - clearRedirects: Se true, svuota anchor paranoid_redirect
+    ///   - operationId: ID univoco
+    ///   - reply: JSON Data con {cleared: [String]} oppure errore
+    func clearHoneypotPF(clearBlocks: Bool, clearRedirects: Bool,
+                         operationId: String,
+                         withReply reply: @escaping (Data?, Error?) -> Void)
 
     // MARK: - Cancellazione
 

@@ -22,7 +22,7 @@ enum HelperConstants {
     static let teamID = "ERAK83QBBM"
 
     /// Versione corrente dell'helper
-    static let helperVersion = "3.10.0"
+    static let helperVersion = "3.11.0"
 
     /// Requisito code-signing per verificare l'app dal lato helper
     static let appSigningRequirement = """

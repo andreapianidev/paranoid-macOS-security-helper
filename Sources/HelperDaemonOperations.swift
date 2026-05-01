@@ -496,6 +496,61 @@ class HelperDaemonOperations: NSObject, PrivilegedHelperProtocol {
         }
     }
 
+    // MARK: - Honeypot PF Rules
+
+    func applyPFBlocks(ipsJSON: Data, operationId: String,
+                       withReply reply: @escaping (Data?, Error?) -> Void) {
+        guard let ips = try? JSONDecoder().decode([String].self, from: ipsJSON) else {
+            reply(nil, HelperError.invalidParameters("Impossibile decodificare lista IP"))
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let result = try PFRulesOperation.applyBlocks(ips: ips)
+                let data = try JSONEncoder().encode(result)
+                HelperLogger.operations.info("[PF] applyBlocks: applied=\(result.applied, privacy: .public)")
+                reply(data, nil)
+            } catch {
+                HelperLogger.operations.error("[PF] applyBlocks failed: \(error.localizedDescription, privacy: .public)")
+                reply(nil, error)
+            }
+        }
+    }
+
+    func applyHoneypotRedirects(redirectsJSON: Data, operationId: String,
+                                withReply reply: @escaping (Data?, Error?) -> Void) {
+        guard let rules = try? JSONDecoder().decode([PFRulesOperation.RedirectRule].self, from: redirectsJSON) else {
+            reply(nil, HelperError.invalidParameters("Impossibile decodificare regole redirect"))
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let result = try PFRulesOperation.applyRedirects(redirects: rules)
+                let data = try JSONEncoder().encode(result)
+                HelperLogger.operations.info("[PF] applyRedirects: applied=\(result.applied, privacy: .public)")
+                reply(data, nil)
+            } catch {
+                HelperLogger.operations.error("[PF] applyRedirects failed: \(error.localizedDescription, privacy: .public)")
+                reply(nil, error)
+            }
+        }
+    }
+
+    func clearHoneypotPF(clearBlocks: Bool, clearRedirects: Bool,
+                         operationId: String,
+                         withReply reply: @escaping (Data?, Error?) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let result = PFRulesOperation.clear(blocks: clearBlocks, redirects: clearRedirects)
+            do {
+                let data = try JSONEncoder().encode(result)
+                HelperLogger.operations.info("[PF] cleared: \(result.cleared.joined(separator: ","), privacy: .public)")
+                reply(data, nil)
+            } catch {
+                reply(nil, error)
+            }
+        }
+    }
+
     // MARK: - Cancellazione
 
     func cancelOperation(operationId: String) {
