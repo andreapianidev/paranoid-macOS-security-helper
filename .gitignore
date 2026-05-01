@@ -1,0 +1,33 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# macOS
+.DS_Store
+*.swp
+*~.nib
+
+# Code signing
+*.mobileprovision
+*.p12
+*.cer
+
+# Logs / dumps
+*.log
+*.pcap
+*.hc22000
+
+# IDE
+.vscode/
+.idea/
