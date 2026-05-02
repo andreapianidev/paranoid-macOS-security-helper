@@ -34,18 +34,31 @@ The closed-source GUI is the product. The thing with `root` is *yours to verify*
 
 ---
 
-## � Screenshots
+## 📸 Screenshots
 
-Real captures from the full Paranoid app — these features are powered by the helper daemon in this repo:
+Real captures from the full Paranoid app — these features are powered by the helper daemon in this repo.
 
-| Offensive Tools | Bluetooth Guard | Wi-Fi Signal & Monitor |
-|:--:|:--:|:--:|
-| ![Offensive Tools sidebar](docs/screenshots/offensivetools.webp) | ![Bluetooth discovery](docs/screenshots/bluetooth.webp) | ![Wi-Fi signal analysis](docs/screenshots/wifisignal.webp) |
-| **Integrated pentesting suite** — PyPhisher, Metasploit, SQLMap, MITMProxy, John, OSINT tools and a built-in terminal. All one click away. | **BLE / Classic device discovery** — identify AirTags and Find My trackers, follow RSSI in real time, locate stalking devices. | **Wi-Fi analysis** — scan nearby networks, inspect channels and RSSI, detect evil twins, rogue APs, deauth attacks. |
+### Offensive Tools
+
+Integrated pentesting suite — PyPhisher, Metasploit, SQLMap, MITMProxy, John, OSINT tools and a built-in terminal. All one click away.
+
+![Offensive Tools sidebar](docs/screenshots/offensivetools.webp)
+
+### Bluetooth Guard
+
+BLE / Classic device discovery — identify AirTags and Find My trackers, follow RSSI in real time, locate stalking devices.
+
+![Bluetooth discovery](docs/screenshots/bluetooth.webp)
+
+### Wi-Fi Signal & Monitor
+
+Wi-Fi analysis — scan nearby networks, inspect channels and RSSI, detect evil twins, rogue APs, deauth attacks.
+
+![Wi-Fi signal analysis](docs/screenshots/wifisignal.webp)
 
 ---
 
-## �🚀 What This Helper Actually Does
+## 🚀 What This Helper Actually Does
 
 A privileged macOS daemon exposing **26 raw-network primitives** over XPC. Think of it as `nmap` + `tcpdump` + `airodump-ng` glued together with `NSXPCConnection`, except:
 
